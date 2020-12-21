@@ -14,6 +14,8 @@ target
 /project/project/target
 /src/main/scala/project/
 /src/main/scala/target/
+zk-single-kafka-multiple/
+docker-compose.yml
 
 .vscode/
 project/metals.sbt

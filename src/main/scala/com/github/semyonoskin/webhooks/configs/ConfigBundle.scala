@@ -18,10 +18,26 @@ case class ConsumerConfig(bootstrapServers: List[String],
 object ConsumerConfig {
 
   implicit val configReader: ConfigReader[ConsumerConfig] = deriveReader[ConsumerConfig]
-
 }
 
-case class ConfigBundle(consumer: ConsumerConfig)
+
+case class TransactorConfig(driver: String, jdbcConnection: String)
+
+object TransactorConfig {
+
+  implicit val transactorConfReader: ConfigReader[TransactorConfig] = deriveReader[TransactorConfig]
+}
+
+case class ServerConfig(port: Int, host: String)
+
+object ServerConfig {
+
+  implicit val serverConfReader: ConfigReader[ServerConfig] = deriveReader[ServerConfig]
+}
+
+
+
+case class ConfigBundle(consumer: ConsumerConfig, transactor: TransactorConfig, server: ServerConfig)
 
 object ConfigBundle {
 

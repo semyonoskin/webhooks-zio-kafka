@@ -13,6 +13,8 @@ import org.http4s.server.blaze.BlazeServerBuilder
 import sttp.client3.httpclient.zio.HttpClientZioBackend
 import zio._
 import zio.interop.catz._
+import com.github.semyonoskin.webhooks.configs.TransactorConfig
+import com.github.semyonoskin.webhooks.configs.ServerConfig
 
 import scala.concurrent.ExecutionContext
 
@@ -28,11 +30,11 @@ object Application extends CatsApp {
     }.as(ExitCode.success).orDie
   }
 
-  def makeBlazeServer(service: CRUDService) = {
+  def makeBlazeServer(config: ServerConfig, service: CRUDService) = {
     val routes = new Routes(service).routes
     val app = Router("/" -> routes).orNotFound
     BlazeServerBuilder[Task](ExecutionContext.global)
-      .bindHttp(8000, "localhost")
+      .bindHttp(config.port, config.host)
       .withHttpApp(app)
       .resource
       .toManaged
@@ -43,15 +45,16 @@ object Application extends CatsApp {
       config <- ZManaged.fromEffect(ConfigBundle.load(pathOpt))
       httpBackend <- HttpClientZioBackend.managed()
       webhookRepo = WebhookRepo.make
-      crudService = CRUDService.make(webhookRepo, transactor)
-      eventService <- EventService.make(webhookRepo, transactor, httpBackend).toManaged_
+      crudService = CRUDService.make(webhookRepo, makeTransactor(config.transactor))
+      eventService <- EventService.make(webhookRepo, makeTransactor(config.transactor), httpBackend).toManaged_
       eventProc = EventsProcessing.make(config.consumer, eventService)
-      server <- makeBlazeServer(crudService)
+      server <- makeBlazeServer(config.server, crudService)
     } yield (eventProc, server)
 
-  private val transactor = Transactor.fromDriverManager[Task](
-    "org.postgresql.Driver",
-    "jdbc:postgresql://localhost:5432/wh_db",
+
+  private def makeTransactor(config: TransactorConfig) = Transactor.fromDriverManager[Task](
+    config.driver,
+    config.jdbcConnection,
     Blocker.liftExecutionContext(ExecutionContexts.synchronous)
   )
 }

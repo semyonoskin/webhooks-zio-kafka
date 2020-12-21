@@ -28,7 +28,7 @@ object EventsProcessing {
           .withGroupId(config.groupId)
           .withClientId(config.clientId)
           .withCloseTimeout(Duration.fromScala(config.closeTimeout))
-      val subscription: Subscription = Subscription.topics("topic")
+      val subscription: Subscription = Subscription.topics(config.topicId)
       new Impl(settings, subscription, eventService)
     }
 

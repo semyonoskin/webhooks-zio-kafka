@@ -31,7 +31,7 @@ object EventService {
     override def process(event: Event): Task[Unit] = {
       val eventType = event.eventType
       val webhooksByEvent = webhooks.getAllByMsgType(eventType).transact(xa)
-      val paths = webhooksByEvent.map { elem => elem.map { u => u.path } }
+      val paths = webhooksByEvent.map { elem => elem.map { u => u.path }}
       paths.flatMap { m => Task.foreach_(m)(u => sendEvent(event, u) *> logger.info(s"sending $eventType to $u"))
       }
     }
